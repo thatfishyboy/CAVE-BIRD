@@ -1,0 +1,498 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed May 24 12:39:49 2023
+
+@author: maxjewett   
+"""
+import random
+import numpy
+import pygame
+from shapely.geometry import Polygon
+
+pygame.init()
+pygame.font.init()
+
+high_score = 0
+
+colors = ['red', 'blue', 'orange', 'purple', 'yellow', 'green', 'white', 'pink', 'brown']
+owned = ['black']
+
+pcolor = 'black'
+tcolor = 'black'
+
+current_color = (0,0,0)
+
+colornums = {'black': (0,0,0),'red':(136,8,8), 'blue': (0,255,255), 'orange': (255,165,0), 'purple':(160,32,240) , 'yellow':(255,255,0) , 'green': (124,252,0), 'white': (255,255,255), 'pink':(159,43,104), 'brown':(255,235,205)}
+
+
+font = pygame.font.SysFont('times',90, True)
+scorefont = pygame.font.SysFont('sans serif',90, True)
+small = pygame.font.SysFont('times',50, True)
+medd = pygame.font.SysFont('times',70, True)
+screen = pygame.display.set_mode((1380, 900))
+pygame.display.set_caption("cave cube")
+
+text_value = ""
+
+white_clicked = False
+white2_clicked = False
+
+cred_img = pygame.image.load("button_credits.png")
+bird = pygame.image.load("bird.png")
+bird = pygame.transform.scale(bird, (40,40))
+bird_mask = pygame.mask.from_surface(bird)
+pause = pygame.image.load("button_pause.png")
+generate = pygame.image.load("color_buy.png")
+shop_img = pygame.image.load("button_shop.png")
+sett_img = pygame.image.load("button_settings.png")
+star_img = pygame.image.load("star.png")
+square = pygame.image.load('square.png')
+square = pygame.transform.scale(square, (33,33))
+square_mask = pygame.mask.from_surface(square)
+quitt = pygame.image.load("quit.png")
+restartt = pygame.image.load("button_restart.png")
+resume = pygame.image.load("button_resume.png")
+back = pygame.image.load("button_back.png")
+star_img = pygame.transform.scale(star_img, (50,50))
+star_mask = pygame.mask.from_surface(star_img)
+
+state = 'startscreen'
+def start_screen():
+    screen.fill((178,190,181))
+    screen.blit(cred_img, (330, 300))
+    screen.blit(shop_img, (900, 300))
+    screen.blit(sett_img, (600, 300))
+    title = font.render("cave cube", True, (0,0,0))
+    high = small.render(f'highscore: {high_score}', True, (0,0,0))
+    start = small.render('- PRESS SPACE TO START -', True, (0,0,0)) 
+    smallfont = pygame.font.SysFont('Unique',25) 
+    screen.blit(title,(480,440))
+    screen.blit(start, (337,600))
+    screen.blit(high, (550,200))
+
+def credit_screen():
+    screen.fill((178,190,181))
+    title = font.render("Credits", True, (0,0,0))
+    screen.blit(title,(50,50))
+    screen.blit(back, (1200,50))
+    text = font.render("Game created by Max Jewett", True, (255,255,255))
+    screen.blit(text , (30 , 320))
+    
+def died():
+    screen.fill((178,190,181))
+    death = small.render('You died :(', True, (255,255,255))
+    scored = small.render(f'Score: {int(counter)}', True, (255,255,255))
+    coins_scored = small.render(f'Coins Collected: {str(coin_count)}', True, (255,255,255))
+    high_score_text = small.render(f'High Score: {str(high_score)}', True, (255,255,255))
+    total_coins = small.render(f'Total Coins: {str(total)}', True, (255,255,255))
+    screen.blit(scored, (200,300))
+    screen.blit(total_coins, (200,600))
+    screen.blit(high_score_text, (200,500))
+    screen.blit(coins_scored, (200,400))
+    screen.blit(death, (200,200))
+    screen.blit(quitt, (950,300))
+    screen.blit(restartt, (950,400))
+    
+def store():
+    screen.fill((178,190,181))
+    t1 = "Click the button below to spend 10 coins"
+    t2 = 'on a new color! You can change the color'
+    t3 = 'of your character in settings.'
+    prompt = small.render(t1, True, (255,255,255))
+    prompt2 = small.render(t2, True, (255,255,255))
+    prompt3 = small.render(t3, True, (255,255,255))
+    title = font.render("Store", True, (0,0,0))
+    amount = font.render(f'Coins: {total}', True, (0,0,0))  
+    screen.blit(title,(50,50))
+    screen.blit(prompt, (100,300))
+    screen.blit(prompt2, (100,350))
+    screen.blit(prompt3, (100,400))
+    screen.blit(amount,(930,50))
+    screen.blit(back, (1200,200))
+    screen.blit(generate, (400,500))
+    try:
+        if blit == True:
+            screen.blit(statement, (400,600))
+    except:
+        pass
+
+def setting_screen():
+    screen.fill((178,190,181))
+    title = font.render("Settings", True, (0,0,0))
+    player_text = medd.render(f'Player color: {pcolor}', True, (0,0,0))
+    enter = small.render('Enter player color:', True, (0,0,0))
+    screen.blit(title,(50,50))
+    screen.blit(back, (1200,50))
+    screen.blit(player_text, (200,400))
+    screen.blit(enter, (200,650))
+    
+    
+
+#def restart():
+    
+    
+class star:
+    def __init__(self,x,y):
+        self.x = x
+        self.y = y
+
+
+stars = []
+
+x = 400
+y = 450
+width = 20
+height = 20
+vel = -0.000001
+max_vel = 10
+min_vel = -10
+acc=0.43
+jump_vel = -6
+
+run = True
+up = 0
+points = []
+bpoints = []
+count = -1
+bcount = -1
+for num in range(0,1400, 10):
+    try:
+        cords = random.randint(points[count][1]-50,points[count][1]+50)
+        if cords>450:
+            cords = cords-100
+        if cords<100:
+            cords = cords+100
+        points.append((num,cords))
+    except:
+        points.append((num,random.randint(100,450)))
+    count = count+1
+points.append((1400,0))
+points.append((0,0))  
+ 
+
+for num in range(0,1400,10):
+    try:
+        bcords = random.randint(bpoints[bcount][1]-50,bpoints[bcount][1]+50)
+        if bcords<500:
+            bcords = bcords+100
+        if bcords>800:
+            bcords = bcords-100
+        bpoints.append((num,bcords))
+    except:
+        bpoints.append((num,random.randint(500,800)))
+    bcount = bcount+1
+bpoints.append((1400,900))
+bpoints.append((0,900))
+
+
+even = True
+counter = 0
+jumped = True
+time = 0
+coin_count = 0
+total = 0
+paused = False
+
+while run:
+    pygame.time.delay(10)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+        if state == 'game':
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_SPACE] or keys[pygame.K_UP] and state=='game':
+                if paused == True:
+                    paused = False 
+                vel = jump_vel
+                y += vel
+                up = 1
+                jumped = True
+    if state == 'startscreen':
+        start_screen()
+        pygame.display.update()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if shop_img.get_rect(topleft = (900,300)).collidepoint(event.pos):
+                state = 'shop' 
+            if cred_img.get_rect(topleft = (330,300)).collidepoint(event.pos):
+                state = 'credits' 
+            if sett_img.get_rect(topleft = (600,300)).collidepoint(event.pos):
+                state = 'settings' 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_SPACE]:
+            state = "game"
+            
+    if state == 'credits':
+        credit_screen()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if back.get_rect(topleft = (1200,50)).collidepoint(event.pos):
+                state = 'startscreen' 
+    if state == 'died':
+        died()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if quitt.get_rect(topleft = (950,300)).collidepoint(event.pos):
+                pygame.quit()
+            
+            if restartt.get_rect(topleft = (950,400)).collidepoint(event.pos):
+                up = 0
+                x = 400
+                y = 450
+                counter = 0
+                coin_count = 0
+                points = []
+                bpoints = []
+                count = -1
+                bcount = -1
+                for num in range(0,1400, 10):
+                    try:
+                        cords = random.randint(points[count][1]-50,points[count][1]+50)
+                        if cords>450:
+                            cords = cords-100
+                        if cords<100:
+                            cords = cords+100
+                        points.append((num,cords))
+                    except:
+                        points.append((num,random.randint(100,450)))
+                    count = count+1
+                points.append((1400,0))
+                points.append((0,0))  
+                 
+
+                for num in range(0,1400,10):
+                    try:
+                        bcords = random.randint(bpoints[bcount][1]-50,bpoints[bcount][1]+50)
+                        if bcords<500:
+                            bcords = bcords+100
+                        if bcords>800:
+                            bcords = bcords-100
+                        bpoints.append((num,bcords))
+                    except:
+                        bpoints.append((num,random.randint(500,800)))
+                    bcount = bcount+1
+                bpoints.append((1400,900))
+                bpoints.append((0,900))
+                state = 'startscreen'
+                
+    if state == 'settings':
+        setting_screen()
+        white = pygame.draw.rect(screen, (255,255,255), pygame.Rect(670, 650, 200, 60))
+
+        try:
+            if white_clicked == True:
+                screen.blit(inputed, (680,650))
+        except:
+            pass
+        
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if back.get_rect(topleft = (1200,50)).collidepoint(event.pos):
+                state = 'startscreen'
+                
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if white.collidepoint(event.pos):
+                white_clicked = True
+ 
+        if white_clicked == True:        
+            if event.type == pygame.TEXTINPUT:
+                text_value += event.text
+                inputed = small.render(text_value, True, (0, 0, 0))
+                pygame.time.delay(200)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_BACKSPACE:
+                    text_value = text_value[:-1]
+                    inputed = small.render(text_value, True, (0, 0, 0))
+                    pygame.time.delay(200)
+                if event.key == pygame.K_RETURN and text_value.lower() in owned: 
+                    inputed = small.render(text_value, True, (0, 0, 0))
+                    pcolor = text_value.lower()
+                    text_value = ''
+                    pygame.time.delay(200)
+                    current_color = colornums[pcolor]
+    
+    if state == 'shop':
+        store()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if back.get_rect(topleft = (1200,200)).collidepoint(event.pos):
+                state = 'startscreen'
+                blit = False
+            if generate.get_rect(topleft = (400,500)).collidepoint(event.pos) and total >= 10:
+                total = total - 10
+                pygame.time.delay(100)
+                state = 'shop'
+                choice = random.choice(colors)
+                owned.append(choice)
+                statement = small.render(f'You unlocked {choice}!', True, (255,255,255))
+                blit = True
+                
+                
+                
+    if state =='game':
+        time = time+1
+        if vel < max_vel and not jumped:
+            vel += acc
+        if up != 0: 
+            y += vel
+        if jumped:
+            jumped = False
+        if up != 0:
+            
+            
+            for num in range(len(bpoints)):
+                bpoints[num] = (bpoints[num][0]-4,bpoints[num][1])
+            
+            for num in range(len(points)):
+                points[num] = (points[num][0]-4,points[num][1])
+                
+        if even == True and paused == False and up != 0:
+            score = scorefont.render(str(int(counter)), True, (255,255,255))
+            counter = counter + 0.06
+            even = False
+        else:
+            even = True
+          
+        bterrain = tuple(bpoints)   
+        
+        terrain = tuple(points)  
+        
+        for pair in bpoints:
+            if pair[0] < -1 and pair[1] != 900:
+                bpoints.remove(pair)
+                
+                bpoints.pop()
+                bpoints.pop()
+                
+                bcords = random.randint(bpoints[-1][1]-50,bpoints[-1][1]+50)
+                if bcords<500:
+                    bcords = bcords+100
+                if bcords>800:
+                    bcords = bcords-100
+                num = bpoints[-1][0]+10
+                bpoints.append((num,bcords))
+                bpoints.append((1400,900))
+                bpoints.append((0,900))
+               
+                
+                
+                
+                
+        
+        for pair in points:
+            if pair[0] < -1 and pair[1] != 0:
+                points.remove(pair)
+                
+                points.pop()
+                points.pop()
+                
+                cords = random.randint(points[-1][1]-50,points[-1][1]+50)
+                if cords>450:
+                    cords = cords-100
+                if cords<100:
+                    cords = cords+100
+                num = points[-1][0]+10
+                points.append((num,cords))
+                points.append((1400,0))
+                points.append((0,0))
+            
+        top_collide = Polygon(points)
+        bottom_collide = Polygon(bpoints)
+        
+            
+        screen.fill((178, 190, 181))
+        
+        screen.blit(square, (x-6.2,y-6.2))
+        player = pygame.draw.rect(screen,current_color, pygame.Rect(x, y, 20, 20) )
+        
+        player_collide = Polygon([player.topleft, player.topright, player.bottomright, player.bottomleft])
+        
+        
+        if player_collide.intersects(top_collide) or player_collide.intersects(bottom_collide):
+            if int(counter) >= high_score:
+                high_score = int(counter)
+            state = 'died'
+        
+        
+        
+        if time % 150 == 0:
+            coin = star(1500, random.randint(200, 700)) 
+            stars.append(coin)
+        
+        if up != 0:
+            for coin in stars:
+                coin.x = coin.x - 4
+                screen.blit(star_img, (coin.x,coin.y))
+        else:
+            for coin in stars:
+                screen.blit(star_img, (coin.x,coin.y))
+                
+        pygame.draw.polygon(screen, (0,0,0), terrain)
+        pygame.draw.polygon(screen, (0,0,0), bterrain)
+
+        try:
+            screen.blit(score,(1250,25))
+        except:
+            pass
+
+        
+        
+        for coin in stars:  
+            if square_mask.overlap(star_mask, (coin.x - x, coin.y - y)):
+                stars.remove(coin)
+                coin_count = coin_count+1
+                total = total + 1
+        coins = scorefont.render(f'Coins: {str(coin_count)}', True, (255,255,255))
+        screen.blit(coins, (30,30))
+        screen.blit(pause, (30,820))
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if pause.get_rect(topleft = (30,820)).collidepoint(event.pos):
+                up = 0
+                paused = True
+        if paused == True:
+            screen.blit(resume, (600, 400))
+            screen.blit(quitt, (615, 500))
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if resume.get_rect(topleft = (600,400)).collidepoint(event.pos):
+                    paused = False
+                if quitt.get_rect(topleft = (610,500)).collidepoint(event.pos):
+                    paused = False
+                    y = 450
+                    x = 400
+                    up = 0
+                    counter = 0
+                    coin_count = 0
+                    points = []
+                    bpoints = []
+                    count = -1
+                    bcount = -1
+                    for num in range(0,1400, 10):
+                        try:
+                            cords = random.randint(points[count][1]-50,points[count][1]+50)
+                            if cords>450:
+                                cords = cords-100
+                            if cords<100:
+                                cords = cords+100
+                            points.append((num,cords))
+                        except:
+                            points.append((num,random.randint(100,450)))
+                        count = count+1
+                    points.append((1400,0))
+                    points.append((0,0))  
+                     
+
+                    for num in range(0,1400,10):
+                        try:
+                            bcords = random.randint(bpoints[bcount][1]-50,bpoints[bcount][1]+50)
+                            if bcords<500:
+                                bcords = bcords+100
+                            if bcords>800:
+                                bcords = bcords-100
+                            bpoints.append((num,bcords))
+                        except:
+                            bpoints.append((num,random.randint(500,800)))
+                        bcount = bcount+1
+                    bpoints.append((1400,900))
+                    bpoints.append((0,900))
+                    state = 'startscreen'
+            
+    pygame.display.update()
+
+
+pygame.quit()
